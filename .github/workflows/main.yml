@@ -1,0 +1,17 @@
+name: Daily Email
+on:
+  schedule:
+    - cron: '0 23 * * *' # 国际时间23点 = 北京时间早上7点
+  workflow_dispatch: # 允许你手动点测试
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Run script
+        run: python send_email.py
