@@ -3,6 +3,7 @@ import os
 import requests
 from email.mime.text import MIMEText
 from email.header import Header
+from email.utils import formataddr
 import datetime
 
 # ================= 原有配置区 =================
@@ -56,8 +57,11 @@ else:
 
 # ================= 发送邮件 =================
 message = MIMEText(content, 'plain', 'utf-8')
-message['From'] = Header("采薇", 'utf-8')
-message['To'] = Header("呆子", 'utf-8')
+
+# 【关键修复区】使用 formataddr 确保发件人格式符合 QQ 邮箱的 RFC 标准
+# 格式为：显示名称 <真实邮箱地址>
+message['From'] = formataddr(("采薇", sender))
+message['To'] = formataddr(("呆子", receiver))
 message['Subject'] = Header(subject, 'utf-8')
 
 try:
