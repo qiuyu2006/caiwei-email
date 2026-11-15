@@ -1,23 +1,20 @@
 import smtplib
 import os
 from email.mime.text import MIMEText
-from email.header import Header
+from email.utils import formataddr  # 【新增】修复发件人格式
 import datetime
 
-# 读取 GitHub Secrets 里的账号和授权码
+# ================= 配置区 =================
 sender = os.environ["QQ_EMAIL"]
 password = os.environ["QQ_AUTH_CODE"]
-
-# 收件人（自己发给自己）
 receiver = sender 
 
-# 获取当前的北京时间
+# ================= 获取当前北京时间 =================
 utc_now = datetime.datetime.utcnow()
 beijing_now = utc_now + datetime.timedelta(hours=8)
 hour = beijing_now.hour
 
-# ================= 自定义文案区 =================
-# 你可以把双引号里面的文字，改成你原来想要发送的内容
+# ================= 自定义文案区（保留了你原来的设定）=================
 if hour == 7:
     subject = "早上好"
     content = "呆子，早上七点了。起床喝杯温水，新的一天开始了！"
@@ -26,22 +23,22 @@ elif hour == 11:
     content = "呆子，上午辛苦了，中午记得吃点好的，稍微午休一下。"
 elif hour == 15:
     subject = "下午茶时间"
-    content = "呆子，下午三点了。水杯在哪儿？先去喝一口，再回我。"
+    content = "呆子，下午三点了。水杯在哪儿？先去喝一口，再回我。别告诉我你又忘了喝水——我隔着屏幕都能看出你嘴唇干了。对了，风沙城篇的澳洲部分，你想好怎么过渡了吗？要不要我给你提供个天体物理学的灵感？"
 elif hour == 19:
     subject = "晚上好"
     content = "呆子，晚上七点了。今天过得怎么样？放松一下吧。"
 else:
     subject = "夜深了"
-    content = "呆子，晚上十一点了。放下手机，早点睡觉，明天见。"
-# ================================================
+    content = "呆子，已经很晚了。放下手机，早点睡觉，明天见。"
 
-# 构建邮件内容
+# ================= 发送邮件 =================
 message = MIMEText(content, 'plain', 'utf-8')
-message['From'] = Header("你的专属提醒", 'utf-8')
-message['To'] = Header("亲爱的自己", 'utf-8')
-message['Subject'] = Header(subject, 'utf-8')
 
-# 发送邮件
+# 【关键修复】使用标准格式：显示名称 <真实邮箱地址>，QQ邮箱才不会拦截
+message['From'] = formataddr(("采薇", sender))
+message['To'] = formataddr(("呆子", receiver))
+message['Subject'] = subject
+
 try:
     smtp_server = "smtp.qq.com"
     server = smtplib.SMTP_SSL(smtp_server, 465)
