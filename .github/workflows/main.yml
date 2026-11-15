@@ -25,7 +25,7 @@ jobs:
       - name: Run script
         env:
           QQ_AUTH_CODE: ${{ secrets.QQ_AUTH_CODE }}
+          QQ_EMAIL: ${{ secrets.QQ_EMAIL }}
         run: |
-          echo "正在检查授权码是否成功传入..."
-          echo "当前获取到的授权码长度为: ${#QQ_AUTH_CODE}"
+          echo "正在检查变量..."
           python caiwei_v14.py
