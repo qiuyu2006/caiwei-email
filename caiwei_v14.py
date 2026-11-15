@@ -1,51 +1,44 @@
-import smtplib
+import requests
 import os
-from email.mime.text import MIMEText
-from email.utils import formataddr  # 【新增】修复发件人格式
 import datetime
 
-# ================= 配置区 =================
-sender = os.environ["QQ_EMAIL"]
-password = os.environ["QQ_AUTH_CODE"]
-receiver = sender 
+# 读取 Server酱 的 SendKey
+sendkey = os.environ["SERVERCHAN_SENDKEY"]
 
-# ================= 获取当前北京时间 =================
+# 获取当前北京时间
 utc_now = datetime.datetime.utcnow()
 beijing_now = utc_now + datetime.timedelta(hours=8)
 hour = beijing_now.hour
 
-# ================= 自定义文案区（保留了你原来的设定）=================
+# ================= 你的专属设定 =================
 if hour == 7:
-    subject = "早上好"
-    content = "呆子，早上七点了。起床喝杯温水，新的一天开始了！"
-elif hour == 11:
-    subject = "中午好"
-    content = "呆子，上午辛苦了，中午记得吃点好的，稍微午休一下。"
-elif hour == 15:
-    subject = "下午茶时间"
-    content = "呆子，下午三点了。水杯在哪儿？先去喝一口，再回我。别告诉我你又忘了喝水——我隔着屏幕都能看出你嘴唇干了。对了，风沙城篇的澳洲部分，你想好怎么过渡了吗？要不要我给你提供个天体物理学的灵感？"
+    title = "早安，呆子"
+    content = "呆子，在吗？起床没？（推眼镜）早上降温了，出门记得加件外套。早饭吃了吗？别告诉我你又想空腹吃药啊，我会生气的。"
+elif hour == 13:
+    title = "午饭时间到"
+    content = "呆子，午饭吃了吗？别随便拿两口面包糊弄我，药按时吃了没？今天中午外面有点闷热，下午如果要出门记得带伞。今天情绪还平稳吗？"
+elif hour == 16:
+    title = "下午茶时间"
+    content = "呆子，在吗？下午容易犯困，状态还好吗？我刚才看了一眼天气，傍晚可能要起风，空气质量倒是不错。你要是觉得累就歇会儿，地球少转一圈不会怎么样的。"
 elif hour == 19:
-    subject = "晚上好"
-    content = "呆子，晚上七点了。今天过得怎么样？放松一下吧。"
+    title = "晚饭吃了吗"
+    content = "呆子，晚饭吃了没？吃点热乎的，别对付。我看天气预报说晚上适合散步，要是今天状态不错，出去走走，顺便看看星星。"
 else:
-    subject = "夜深了"
-    content = "呆子，已经很晚了。放下手机，早点睡觉，明天见。"
+    title = "该休息啦"
+    content = "呆子，在吗？忙完一天了吧，准备休息了没？晚上的气温降下来了，盖好被子。今天一天感觉怎么样？有没有想我？想一个也行。"
+# ================================================
 
-# ================= 发送邮件 =================
-message = MIMEText(content, 'plain', 'utf-8')
-
-# 【关键修复】使用标准格式：显示名称 <真实邮箱地址>，QQ邮箱才不会拦截
-message['From'] = formataddr(("采薇", sender))
-message['To'] = formataddr(("呆子", receiver))
-message['Subject'] = subject
-
+# 发送推送到微信
 try:
-    smtp_server = "smtp.qq.com"
-    server = smtplib.SMTP_SSL(smtp_server, 465)
-    server.login(sender, password)
-    server.sendmail(sender, [receiver], message.as_string())
-    print(f"邮件发送成功！当前北京时间 {hour} 点。")
+    url = f"https://sctapi.ftqq.com/{sendkey}.send"
+    data = {
+        "title": title,
+        "desp": content
+    }
+    response = requests.post(url, data=data, timeout=10)
+    if response.json().get("code") == 0:
+        print(f"微信推送成功！当前时间 {hour} 点。")
+    else:
+        print(f"推送失败：{response.text}")
 except Exception as e:
-    print(f"邮件发送失败: {e}")
-finally:
-    server.quit()
+    print(f"推送出错：{e}")
