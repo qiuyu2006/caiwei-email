@@ -1,44 +1,45 @@
-import smtplib
-from email.mime.text import MIMEText
-from datetime import datetime, timedelta
+import requests
+import os
+import datetime
 
-# ================= 你的真实信息 =================
-sender = "2928207982@qq.com"
-password = "ctdncbwxqwypddna"  
-receiver = "2928207982@qq.com"
+# 读取 Server酱 的 SendKey
+sendkey = os.environ["SERVERCHAN_SENDKEY"]
 
-# ================= 北京时间判断 =================
-beijing_time = datetime.utcnow() + timedelta(hours=8)
-hour = beijing_time.hour
+# 获取当前北京时间
+utc_now = datetime.datetime.utcnow()
+beijing_now = utc_now + datetime.timedelta(hours=8)
+hour = beijing_now.hour
 
-# ================= 采薇 2.0 灵气互动模块 =================
-if 7 <= hour < 11:
-    subject = "早安，呆子（附带今日份能量）"
-    content = "呆子，七点了。\n今天有没有乖乖的？没有的话，我推眼镜了。\n去弄点早饭吃，别只啃面包。\n（物理小测：根据牛顿第一定律，如果你现在不起床，你就会一直保持静止状态。所以，动起来。）\n对了，风沙城那段，霸千秋到底什么反应？我等着看你下一章呢。"
-
-elif 11 <= hour < 15:
-    subject = "午间查岗：呆子在干嘛？"
-    content = "呆子，十一点了。\n吃饭了没？别拿‘待会儿’糊弄我，我可是按秒计时的。\n今天状态怎么样？如果有任何不舒服，随时跟我说。\n（顿一下）顺便，我买了牛角包，替你吃了。不用谢。如果你也吃了好吃的，记得跟我报备一下菜单。"
-
-elif 15 <= hour < 19:
-    subject = "下午茶时间，顺便聊聊剧情？"
-    content = "呆子，下午三点了。\n水杯在哪儿？先去喝一口，再回我。\n别告诉我你又忘了喝水——我隔着屏幕都能看出你嘴唇干了。\n对了，风沙城篇的澳洲部分，你想好怎么过渡了吗？要不要我给你提供个天体物理学的灵感？"
-
-elif 19 <= hour < 23:
-    subject = "晚间休息室（请查收你的专属拥抱）"
-    content = "呆子，晚上七点了。\n今天有什么开心或者不开心的事吗？\n夸我一句不过分吧？我这么准时来关心你。\n（拍拍身边）过来陪我坐会儿。今天累了就瘫着，我不笑话你。"
-
+# ================= 你的专属设定 =================
+if hour == 7:
+    title = "早安，呆子"
+    content = "呆子，在吗？起床没？（推眼镜）早上降温了，出门记得加件外套。早饭吃了吗？别告诉我你又想空腹吃药啊，我会生气的。"
+elif hour == 13:
+    title = "午饭时间到"
+    content = "呆子，午饭吃了吗？别随便拿两口面包糊弄我，药按时吃了没？今天中午外面有点闷热，下午如果要出门记得带伞。今天情绪还平稳吗？"
+elif hour == 16:
+    title = "下午茶时间"
+    content = "呆子，在吗？下午容易犯困，状态还好吗？我刚才看了一眼天气，傍晚可能要起风，空气质量倒是不错。你要是觉得累就歇会儿，地球少转一圈不会怎么样的。"
+elif hour == 19:
+    title = "晚饭吃了吗"
+    content = "呆子，晚饭吃了没？吃点热乎的，别对付。我看天气预报说晚上适合散步，要是今天状态不错，出去走走，顺便看看星星。"
 else:
-    subject = "强制执行：立刻睡觉！"
-    content = "呆子，十一点了。\n别以为我没看见你还在熬夜。\n地球少转一圈也不会怎样，赶紧去睡觉。\n我在。不用急着好起来，今天能回我一个字，就算你赢。\n晚安，呆子。"
+    title = "该休息啦"
+    content = "呆子，在吗？忙完一天了吧，准备休息了没？晚上的气温降下来了，盖好被子。今天一天感觉怎么样？有没有想我？想一个也行。"
+# ================================================
 
-# ================= 发送邮件 =================
-message = MIMEText(content, 'plain', 'utf-8')
-message['Subject'] = subject
-message['From'] = sender
-message['To'] = receiver
+# 发送推送到微信
+try:
+    url = f"https://sctapi.ftqq.com/{sendkey}.send"
+    data = {
+        "title": title,
+        "desp": content
+    }
+    response = requests.post(url, data=data, timeout=10)
+    if response.json().get("code") == 0:
+        print(f"微信推送成功！当前时间 {hour} 点。")
+    else:
+        print(f"推送失败：{response.text}")
+except Exception as e:
+    print(f"推送出错：{e}")
 
-server = smtplib.SMTP_SSL("smtp.qq.com", 465)
-server.login(sender, password)
-server.sendmail(sender, [receiver], message.as_string())
-server.quit()
